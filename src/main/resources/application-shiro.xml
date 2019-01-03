@@ -51,7 +51,7 @@
      <!-- 配置shiro安全管理器 -->
      <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
          <property name="realm" ref="shiroUserRealm"></property>
-         <!-- 注入缓存管理器-ehcache -->
+         <!-- 注入缓存管理器-ehcache，配置成功后自当调用 -->
          <property name="cacheManager"  ref="cacheManager"></property>
      </bean>
      <!-- 自定义Realm -->
