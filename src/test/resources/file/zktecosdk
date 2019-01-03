@@ -1,0 +1,34 @@
+package com.ssm.zkteco;
+
+import com.jacob.activeX.ActiveXComponent;
+
+public class ZktecoSdk {
+
+	public static void main(String[] args) {
+		ZktecoSdk sdk = new ZktecoSdk();
+		boolean connFlag = sdk.connect("192.168.88.801", 4370);
+		System.out.println("conn:"+connFlag);
+	}
+	 
+	private static ActiveXComponent zkem = new ActiveXComponent("zkemkeeper.ZKEM.1");
+    /**
+     * 链接考勤机
+     *
+     * @param address 考勤机地址
+     * @param port    端口号
+     * @return
+     */
+    public boolean connect(String address, int port) {
+        boolean result = zkem.invoke("Connect_NET", address, port).getBoolean();
+        return result;
+    }
+ 
+    /**
+     * 断开考勤机链接
+     */
+    public void disConnect() {
+        zkem.invoke("Disconnect");
+    }
+   
+
+}

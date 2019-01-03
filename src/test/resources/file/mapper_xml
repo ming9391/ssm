@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">  
+
+<mapper namespace="com.touchtech.mapper.DataProcessingMapper">
+	<!-- /**根据城市名字获取城市的code*/
+	public String getCityCode(String cityName); -->
+	<select id="getCityCode" resultType="String">
+		select city_code from t_code_cities where city_name=#{cityName}
+	</select>
+	
+	<!-- /**根据表名抽取电话号码*/
+	public List<String> getPhonesByTableName(@Param("tableName")String tableName,@Param("num")Integer num,@Param("projectId")Integer projectId); -->
+	<select id="getPhonesByTableName" resultType="String" statementType="STATEMENT">
+		select top(${num}) phone from ${tableName} where is_used_project${projectId} != 1 and is_valid=0
+	</select>
+	
+	<!-- /**修改抽取号码的状态和日期*/
+	public void updateGetedPhonesStatus(@Param("tableName")String tableName,@Param("num")Integer num,@Param("projectId")Integer projectId); -->
+	<update id="updateGetedPhonesStatus" statementType="STATEMENT">
+		update ${tableName} set is_used_project${projectId}=1,utime_project${projectId}=getDate() where phone in (
+			select top(${num}) phone from ${tableName} where is_used_project${projectId} != 1 and is_valid=0)
+	</update>
+	
+	<!-- /**修改t_tail_report的已经使用数量*/
+	void updateRportUsedNum(@Param("cityName")String cityName,@Param("num")Integer num,@Param("projectId")Integer projectId); -->
+	<update id="updateRportUsedNum" statementType="STATEMENT">
+		update t_tail_report set used_p${projectId}=used_p${projectId}+${num} where city_id=(select id from t_code_cities where city_name='${cityName}')
+	</update>
+	
+	<!-- /**根据城市名字生成号码*/
+	void createTable(@Param("tableName") String tableName,@Param("projectIds") List projectIds); -->
+	<insert id="createTable" statementType="STATEMENT">
+		IF NOT EXISTS (select * from SysObjects where name='${tableName}') 
+			create table ${tableName} (
+				id int IDENTITY(1,1) PRIMARY KEY,
+				phone VARCHAR(12),
+				is_valid tinyint DEFAULT(0),
+				<foreach collection="projectIds" item="id" open="" separator="," close="">
+					is_used_project${id} bit DEFAULT(0),
+					utime_project${id} datetime2
+	 			</foreach>
+				)
+	</insert>
+	
+	<!-- /**查询所有项目*/
+	List<Project> selectAllProject(); -->
+	<select id="selectAllProject" resultType="com.touchtech.entity.Project">
+		select 	
+			id,
+			name,
+			cuser,
+			ctime,
+			is_delete isDelete,
+			remark 
+		from
+			t_project
+		where
+			id not in(2,3,4,5,6,7)	 
+	</select>
+	
+	<!-- /**查询所有项目*/
+	List<Project> selectAllProject1(); -->
+	<select id="selectAllProject1" resultType="com.touchtech.entity.Project">
+		select 	
+			id,
+			name,
+			cuser,
+			ctime,
+			is_delete isDelete,
+			remark 
+		from
+			t_project
+		where
+			id not in(2,3,4,5,6,7)	
+		and
+			is_delete=0 
+	</select>
+	
+	<!-- /**生成指定城市的所有号码*/
+	void insertPhones(@Param("cityName") String cityName,@Param("tableName") String tableName,
+			@Param("total") Integer total,@Param("skip") Integer skip); -->
+	<insert id="insertPhones" statementType="STATEMENT">
+		insert into ${tableName} (phone) 
+			 select phone from(select s.segment+''+t.tail_num as phone from t_segment s,
+				(select top ${total} tail_num from t_tail EXCEPT select top ${skip} tail_num from t_tail) t WHERE s.city='${cityName}') a
+	</insert>
+	
+	<!-- /**把生成的号码中无效的号段号码is_valid改为3*/
+	void updateInvalid(@Param("tableName") String tableName,@Param("cityName") String cityName); -->
+	<update id="updateInvalid" statementType="STATEMENT">
+		update ${tableName} set is_valid=3 where substring(phone,1,7) in (select segment from t_segment where is_valid=0 and city='${cityName}')
+	</update>
+	
+	<!-- /**把t_code_cities指定城市的is_generated改为1*/
+	void updateIsgenerated(String cityName); -->
+	<update id="updateIsgenerated">
+		update t_code_cities set is_generated=1 where city_name=#{cityName}
+	</update>
+	
+	<!-- /**给is_valid字段加注释*/
+	void addNotes(@Param("tableName") String tableName); -->
+	<update id="addNotes" statementType="STATEMENT">
+		execute sp_addextendedproperty 'MS_Description','0不确定,1有效能接通,2有效未接通，3无效号段组成的号码','user','dbo','table','${tableName}','column','is_valid'
+	</update>
+	
+	<!-- /**根据号段查找所属城市*/
+	String selectCityBySegment(String segment); -->
+	<select id="selectCityBySegment" resultType="String">
+		select city from t_segment where segment=#{segment}
+	</select>
+	
+	<!-- /**根据给定的号码List更改is_valid的状态为1*/
+	void updateIsValidByPhones(@Param("phones") List<String> phones,@Param("tableName") String tableName); -->
+	<update id="updateIsValidByPhones" statementType="STATEMENT">
+		update ${tableName} set is_valid=1 where phone in (
+			<foreach collection="phones" item="phone" open="" separator="," close="">
+				'${phone}'
+			</foreach>
+		)
+	</update>
+	<!-- /**插入数据到others表*/
+	void insertPhoneToOthers(@Param("phones") List<String> phones); -->
+	<insert id="insertPhoneToOthers">
+		insert into x_phones_others (phone) values <foreach collection="phones" item="phone" open="" separator="," close="">
+		(#{phone})
+		</foreach>
+	</insert>
+	
+	<!-- /**通过others表里的数据修改指定城市的isvalid=1*/
+	void updateIsvalidFromOthersTable(@Param("tableName") String tableName,@Param("cityName") String cityName); -->
+	<update id="updateIsvalidFromOthersTable" statementType="STATEMENT">
+		update ${tableName} set is_valid=1 where phone in 
+		(select phone from x_phones_others where SUBSTRING(phone,1,7) in (select segment from t_segment where city='${cityName}'))
+		
+	</update>
+	<!-- /**删除others表里该城市的数据*/
+	void deletPhonesByCityName(String cityName); -->
+	<delete id="deletPhonesByCityName" parameterType="String">
+		delete from x_phones_others where substring(phone,1,7) in (select segment from t_segment where city=#{cityName})
+	</delete>
+	
+	
+	<!-- /**根据城市名称查询该城市的所有号段*/
+	List<String> selectSegmentByCityName(String cityName); -->
+	<select id="selectSegmentByCityName" resultType="String">
+		select segment from t_segment where city=#{cityName}
+	</select>
+	
+	<!-- /**查询可抽取条数*/
+	Integer selectNotUsePhone(@Param("tableName") String tableName,@Param("projectId") Integer projectId); -->
+	<select id="selectNotUsePhone" statementType="STATEMENT" resultType="Integer">
+		select count(*) from ${tableName} where is_used_project${projectId}=0 and is_valid != 3
+	</select>
+	
+	
+	<!-- /**查询总条数*/
+	Integer selectTotal(String cityCode); -->
+	<select id="selectTotal" resultType="Integer">
+		select count(*)*(select count(*) from t_tail) from t_segment where city=(select city_name from t_code_cities where city_code=#{cityCode}) and is_valid=1
+	</select>
+	
+	<!-- /**根据cityCode查询该城市号码是否已经生成*/
+	Integer selectGenerated(String cityCode); -->
+	<select id="selectGenerated" resultType="Integer">
+		select is_generated from t_code_cities where city_code=#{cityCode}
+	</select>
+	
+	<!-- /**根据cityName查询该城市号码是否已经生成*/
+	Integer selectGeneratedByName(String cityName); -->
+	<select id="selectGeneratedByName" resultType="Integer">
+		select is_generated from t_code_cities where city_name=#{cityName}
+	</select>
+		
+	<!-- /**插入导入导出历史记录*/
+	void insertHistory(History history); -->
+	<insert id="insertHistory" parameterType="com.touchtech.entity.History">
+		insert into t_history (user_id,
+								import_or_export,
+								export_projectId,
+								export_city,
+								export_num,
+								import_num,
+								import_detail,
+								ctime,
+								remark)	
+						values (#{userId},
+								#{importOrExport},
+								#{exportProjectId},
+								#{exportCity},
+								#{exportNum},
+								#{importNum},
+								#{importDetail},
+								#{ctime},
+								#{remark}
+								)
+	</insert>
+	
+	<!-- /**从t_tail_report表查询总数*/
+	Integer selectTotalNum(@Param("cityCode")String cityCode); -->
+	<select id="selectTotalNum" resultType="Integer" statementType="STATEMENT">
+		select 
+			total_num 
+		from 
+			t_tail_report 
+		where 
+			city_id=(select id from t_code_cities where city_code='${cityCode}')
+	</select>
+	<!-- /**查询未经使用的数量*/
+	Integer selectNotUsedNum(@Param("cityCode")String cityCode,@Param("projectId") Integer projectId); -->
+	<select id="selectNotUsedNum" resultType="Integer" statementType="STATEMENT">
+		select 
+			total_num-used_p${projectId} 
+		from 
+			t_tail_report 
+		where 
+			city_id=(select id from t_code_cities where city_code='${cityCode}')
+	</select>
+</mapper>

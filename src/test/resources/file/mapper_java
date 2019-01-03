@@ -1,0 +1,66 @@
+package com.ssm.mapper;
+
+import java.util.List;
+import org.apache.ibatis.annotations.Param;
+import com.touchtech.entity.History;
+import com.touchtech.entity.Project;
+
+public interface DataProcessingMapper {
+	/**根据城市名字获取城市的code*/
+	public String getCityCode(String cityName);
+	/**根据表名、数量、项目id 抽取电话号码*/
+	public List<String> getPhonesByTableName(@Param("tableName")String tableName,@Param("num")Integer num,@Param("projectId")Integer projectId);
+	/**修改抽取号码的状态和日期*/
+	public void updateGetedPhonesStatus(@Param("tableName")String tableName,@Param("num")Integer num,@Param("projectId")Integer projectId);
+	
+	/**修改t_tail_report的已经使用数量*/
+	void updateRportUsedNum(@Param("cityName")String cityName,@Param("num")Integer num,@Param("projectId")Integer projectId);
+	
+	/**查询所有项目包括删除的*/
+	List<Project> selectAllProject();
+	/**查询所有项目不包括删除的 */
+	List<Project> selectAllProject1();
+	/**根据城市名创建表*/
+	void createTable(@Param("tableName") String tableName,@Param("projectIds") List projectIds);
+	/**生成指定城市的所有号码*/
+	void insertPhones(@Param("cityName") String cityName,@Param("tableName") String tableName,
+			@Param("total") Integer total,@Param("skip") Integer skip);
+	/**把生成的号码中无效的号段号码is_valid改为3*/
+	void updateInvalid(@Param("tableName") String tableName,@Param("cityName") String cityName);
+	/**把t_code_cities指定城市的is_generated改为1*/
+	void updateIsgenerated(@Param("cityName") String cityName);
+	/**给is_valid字段加注释*/
+	void addNotes(@Param("tableName") String tableName);
+	
+	/**根据号段查找所属城市*/
+	String selectCityBySegment(String segment);
+	/**根据给定的号码List更改is_valid的状态为1*/
+	void updateIsValidByPhones(@Param("phones") List<String> phones,@Param("tableName") String tableName);
+	/**插入数据到others表*/
+	void insertPhoneToOthers(@Param("phones") List<String> phones);
+	/**通过others表里的数据修改指定城市的isvalid=1*/
+	void updateIsvalidFromOthersTable(@Param("tableName") String tableName,@Param("cityName") String cityName);
+	/**删除others表里该城市的数据*/
+	void deletPhonesByCityName(@Param("cityName") String cityName);
+	
+	/**根据城市名称查询该城市的所有号段*/
+	List<String> selectSegmentByCityName(String cityName);
+	
+	/**查询可抽取条数*/
+	Integer selectNotUsePhone(@Param("tableName") String tableName,@Param("projectId") Integer projectId);
+	/**查询总条数*/
+	Integer selectTotal(String cityCode);
+	/**根据cityCode查询该城市号码是否已经生成*/
+	Integer selectGenerated(String cityCode);
+	/**根据cityName查询该城市号码是否已经生成*/
+	Integer selectGeneratedByName(String cityName);
+	//-----t_tail_report表--------
+	/**从t_tail_report表查询总数*/
+	Integer selectTotalNum(@Param("cityCode")String cityCode);
+	/**查询未经使用的数量*/
+	Integer selectNotUsedNum(@Param("cityCode")String cityCode,@Param("projectId") Integer projectId);
+	
+	/**插入导入导出历史记录*/
+	void insertHistory(History history);
+		
+}
