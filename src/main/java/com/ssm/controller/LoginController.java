@@ -34,7 +34,6 @@ public class LoginController {
 			}
 			//subject.checkRole("admin");//检查是否包含该权限
 			User user1 = (User) request.getSession().getAttribute("user");
-			System.out.println(user1);
 			System.out.println("认证："+subject.isAuthenticated());
 		} catch (Exception e) {
 			System.out.println("登陆失败："+e.getMessage());
