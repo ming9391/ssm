@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ssm.mapper.HrFileMapper">
+
+    <select id="getHrEmailConfig" resultType="java.util.HashMap">
+       select sendTo from hr_email_config
+    </select>
+
+    <delete id="deleteFile">
+        delete from hr_file
+    </delete>
+    
+    <insert id="insertFile" parameterType="java.util.List">
+        insert into hr_file (employee_no,given_name,surname,chinese_name,alias_name,email,employee_status,employee_status_date,division,section,department,position,date_join,staff_grade_code,staff_grade_description,create_date)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (
+            #{item.employee_no},
+            #{item.given_name},
+            #{item.surname},
+            null,
+            #{item.alias_name},
+            #{item.email},
+            #{item.employee_status},
+            #{item.employee_status_date},
+            #{item.division},
+            #{item.section},
+            #{item.department},
+            #{item.position},
+            #{item.date_join},
+            #{item.staff_grade_code},
+            #{item.staff_grade_description},
+            now()
+            )
+        </foreach>
+    </insert>
+    
+    <update id="updateHrUser" statementType="CALLABLE">
+         <![CDATA[ {call proc_hr_user_ext_up()}]]>
+    </update>
+    
+    <select id="getNotExtsisPosition" resultType="java.util.HashMap">
+       select t1.employee_no,t1.department,t1.position from hr_file t1 where t1.employee_no in (
+	    select a1.LOGIN_NAME from sys_user a1,sys_user_ext a2 where a1.USER_ID=a2.USER_ID and a2.EXPIRY_DATE is null and a2.TEMINATION_DATE is null
+			) and t1.department_id is not null and (
+		 not exists (select 1 from staff_position t2 where t1.department_id=t2.DEPART_CODE)
+		 or not exists (select 1 from staff_position t2 where t1.position=t2.POSITION_NAME)
+		)
+    </select>
+    
+    <select id="getNewUserInfo" resultType="java.util.HashMap">
+       select t2.LOGIN_NAME from sys_user t2 where date(t2.CREATE_DATE)=date(now())
+    </select>
+</mapper>
