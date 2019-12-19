@@ -13,10 +13,12 @@ import com.ssm.model.HrEmail;
 import com.ssm.model.HrFile;
 import com.ssm.utils.EmailUtil;
 import com.ssm.utils.IEmailUtil;
+import com.ssm.utils.TxtUtil;
 
 import java.io.File;
 import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -54,12 +56,23 @@ public class HrFileServiceImpl implements HrFileService{
 	            List<HashMap<String, String>> newUserInfo = hrFileMapper.getNewUserInfo();
 	            String newUser = resolveListMap(newUserInfo);
 	            
-	            rs_email += "<strong>1、本次共获取："+insertFile+" 条记录</strong><br/>";
-	            rs_email += "<strong>2、本次新增用户信息到佣金系统："+newUserInfo.size()+" 条记录，请在佣金系统->系统关联->用户管理界面：修改以下工号的 DS_CODE、TEAM、职位等有效信息：</strong>";
-	            rs_email += "<P>"+newUser+"</P>";
+	            rs_email += " 1、本次共获取："+insertFile+" 条记录\r\n\r\n";
+	            rs_email += " 2、本次新增用户信息到佣金系统："+newUserInfo.size()+" 条记录，请在佣金系统->系统关联->用户管理界面：修改以下工号的 DS_CODE、TEAM、职位等有效信息\r\n   ";
+	            rs_email += newUser+"\r\n\r\n";
 	            rs_email += rs_position;
 	            
-    			EmailUtil.sendEmail("3337028770@qq.com","etgzxjeepxncdbcj",sendTo,"hr入库报文",rs_email);
+	            // 生成txt附件
+	            TxtUtil.writeTxt("F:/csv/log/","hr.txt",rs_email);
+	            System.out.println("hr信息入库完毕！");
+	            
+	            String rs_content = "";
+	            rs_content += "<p>Dear All,</p>";
+	            rs_content += "<p>&nbsp;&nbsp;以下是hr信息同步结果，请查看附件</p>";
+	            rs_content += "<p>1、本次共获取："+insertFile+" 条记录 </p>";
+	            rs_content += "<p>2、本次新增用户信息到佣金系统："+newUserInfo.size()+" 条记录，请在佣金系统->系统关联->用户管理界面：修改 DS_CODE、TEAM、职位等有效信息：</p>";
+	            
+	            //发送邮件
+    			EmailUtil.sendEmail("3337028770@qq.com","etgzxjeepxncdbcj",sendTo,"hr入库报文",rs_content,"F:/csv/log/hr.txt","hr_message.txt");
 	        }
     	}catch (Exception e) {
     		e.printStackTrace();
@@ -72,12 +85,11 @@ public class HrFileServiceImpl implements HrFileService{
     	if(parm!=null && parm.size()>0) {
     		for (Map<String, String> m : parm){ 
     		      for (String k : m.keySet()){ 
-    		       // System.out.println(k + " : " + m.get(k)); 
-    		        rs +=m.get(k)+",";
+    		        rs +=m.get(k)+","; // System.out.println(k + " : " + m.get(k)); 
     		      } 
     			}
+    		rs=rs.substring(0, rs.length() - 1);
     	}
-    	rs=rs.substring(0, rs.length() - 1);
     	return rs;
     }
     
@@ -85,7 +97,7 @@ public class HrFileServiceImpl implements HrFileService{
     private static String resolvePosition(List<HashMap<String,String>> parm){
     	String sendTo="";
     	if(parm!=null && parm.size()>0) {
-    		sendTo = "<strong>3、以下工号匹配不上佣金系统的职位信息，请检查：</strong><p>";
+    		sendTo = " 3、以下工号匹配不上佣金系统的职位信息，请检查\r\n   ";
     		for (Map<String, String> m : parm){ 
     		      for (String k : m.keySet()){ 
     		    	 if(k.equalsIgnoreCase("employee_no")) {
@@ -98,7 +110,7 @@ public class HrFileServiceImpl implements HrFileService{
     		    		 sendTo +="，职位："+m.get(k);
     		    	 }
     		      }
-    		      sendTo += "</p>";
+    		      sendTo += "\r\n   ";
     			}
     	}
     	return sendTo;
@@ -106,7 +118,7 @@ public class HrFileServiceImpl implements HrFileService{
     
     // 文件内容封装到实体
     private static ArrayList<HrFile> readFileToEntity(ArrayList<String[]> list) {
-        SimpleDateFormat df = new SimpleDateFormat("mm-dd-yyyy");
+    	DateFormat df=new SimpleDateFormat("MM-dd-yyyy");
         ArrayList<HrFile> hrFilesList = new ArrayList<>();
         for (int i = 0; i < list.size(); i++) {
             String[] strings = list.get(i);

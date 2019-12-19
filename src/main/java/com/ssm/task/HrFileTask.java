@@ -15,7 +15,7 @@ public class HrFileTask {
 	@Autowired
 	private HrFileService hrFileService;
 	
-	@Scheduled(cron = "0/20 * * * * ?")
+	@Scheduled(cron = "0/10 * * * * ?")
     public void hrFileTk() throws Exception {
 		hrFileService.hrFile();
 	}
