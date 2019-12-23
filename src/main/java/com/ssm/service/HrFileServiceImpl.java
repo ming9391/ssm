@@ -42,37 +42,39 @@ public class HrFileServiceImpl implements HrFileService{
 	        String filePath = "F:/csv";
 	        String newFilePath = readNewFileName(filePath);
 	        // 读取文件内容
-	        ArrayList<String[]> list = csvReaderFile(newFilePath);
-	        if (list != null) {
-	        	hrFileMapper.deleteFile();
-	            ArrayList<HrFile> hrFiles = readFileToEntity(list);
-	            Integer insertFile = hrFileMapper.insertFile(hrFiles);
-	            // 更新user信息
-	            hrFileMapper.updateHrUser();
-	            
-	            // 获取匹配不上职位等信息发送邮件
-	            List<HashMap<String,String>> position = hrFileMapper.getNotExtsisPosition();
-	            String rs_position = resolvePosition(position);
-	            List<HashMap<String, String>> newUserInfo = hrFileMapper.getNewUserInfo();
-	            String newUser = resolveListMap(newUserInfo);
-	            
-	            rs_email += " 1、本次共获取："+insertFile+" 条记录\r\n\r\n";
-	            rs_email += " 2、本次新增用户信息到佣金系统："+newUserInfo.size()+" 条记录，请在佣金系统->系统关联->用户管理界面：修改以下工号的 DS_CODE、TEAM、职位等有效信息\r\n   ";
-	            rs_email += newUser+"\r\n\r\n";
-	            rs_email += rs_position;
-	            
-	            // 生成txt附件
-	            TxtUtil.writeTxt("F:/csv/log/","hr.txt",rs_email);
-	            System.out.println("hr信息入库完毕！");
-	            
-	            String rs_content = "";
-	            rs_content += "<p>Dear All,</p>";
-	            rs_content += "<p>&nbsp;&nbsp;以下是hr信息同步结果，请查看附件</p>";
-	            rs_content += "<p>1、本次共获取："+insertFile+" 条记录 </p>";
-	            rs_content += "<p>2、本次新增用户信息到佣金系统："+newUserInfo.size()+" 条记录，请在佣金系统->系统关联->用户管理界面：修改 DS_CODE、TEAM、职位等有效信息：</p>";
-	            
-	            //发送邮件
-    			EmailUtil.sendEmail("3337028770@qq.com","etgzxjeepxncdbcj",sendTo,"hr入库报文",rs_content,"F:/csv/log/hr.txt","hr_message.txt");
+	        if(newFilePath!=null) {
+		        ArrayList<String[]> list = csvReaderFile(newFilePath);
+		        if (list != null) {
+		        	hrFileMapper.deleteFile();
+		            ArrayList<HrFile> hrFiles = readFileToEntity(list);
+		            Integer insertFile = hrFileMapper.insertFile(hrFiles);
+		            // 更新user信息
+		            hrFileMapper.updateHrUser();
+		            
+		            // 获取匹配不上职位等信息发送邮件
+		            List<HashMap<String,String>> position = hrFileMapper.getNotExtsisPosition();
+		            String rs_position = resolvePosition(position);
+		            List<HashMap<String, String>> newUserInfo = hrFileMapper.getNewUserInfo();
+		            String newUser = resolveListMap(newUserInfo);
+		            
+		            rs_email += " 1、本次共获取："+insertFile+" 条记录\r\n\r\n";
+		            rs_email += " 2、本次新增用户信息到佣金系统："+newUserInfo.size()+" 条记录，请在佣金系统->系统关联->用户管理界面：修改以下工号的 DS_CODE、TEAM、职位等有效信息\r\n   ";
+		            rs_email += newUser+"\r\n\r\n";
+		            rs_email += rs_position;
+		            
+		            // 生成txt附件
+		            TxtUtil.writeTxt("F:/csv/log/","hr.txt",rs_email);
+		            System.out.println("hr信息入库完毕！");
+		            
+		            String rs_content = "";
+		            rs_content += "<p>Dear All,</p>";
+		            rs_content += "<p>&nbsp;&nbsp;以下是hr信息同步结果，请查看附件</p>";
+		            rs_content += "<p>1、本次共获取："+insertFile+" 条记录 </p>";
+		            rs_content += "<p>2、本次新增用户信息到佣金系统："+newUserInfo.size()+" 条记录，请在佣金系统->系统关联->用户管理界面：修改 DS_CODE、TEAM、职位等有效信息：</p>";
+		            
+		            //发送邮件
+	    			EmailUtil.sendEmail("3337028770@qq.com","etgzxjeepxncdbcj",sendTo,"hr入库报文",rs_content,"F:/csv/log/hr.txt","hr_message.txt");
+		        }
 	        }
     	}catch (Exception e) {
     		e.printStackTrace();
@@ -175,6 +177,7 @@ public class HrFileServiceImpl implements HrFileService{
         File dir = new File(filePath);
         if (dir.exists()) {
             File[] fileList = dir.listFiles();
+            if(fileList.length>0){
             List<String> strList = new ArrayList<String>();
             for (File f : fileList) {
                 if ((f.isFile())
@@ -190,6 +193,7 @@ public class HrFileServiceImpl implements HrFileService{
             Object[] obj = map.keySet().toArray();
             Arrays.sort(obj);
             return map.get(obj[obj.length - 1]);
+            }
         }
         return null;
     }

@@ -37,11 +37,10 @@ public class EmailUtil {
 		Properties properties = new Properties();
 		properties.setProperty("mail.host", "smtp.qq.com");
 		properties.setProperty("mail.transport.protocol", "smtp");
-		properties.setProperty("mail.smtp.auth", "true");
-
 		//邮箱发送服务器端口,这里设置为 lsof -i:465 587端口
         //properties.setProperty("mail.smtp.port", "465");
         //properties.setProperty("mail.smtp.socketFactory.port", "465");
+		properties.setProperty("mail.smtp.auth", "true");
 		
 		// QQ存在一个特性设置SSL加密
 		MailSSLSocketFactory sf = new MailSSLSocketFactory();

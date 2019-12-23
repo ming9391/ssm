@@ -7,6 +7,10 @@ import org.junit.Test;
 
 public class MD5 {
 
+	/**
+	 * 1、用户名和密码混合加盐加密
+	 * 2、加密1次
+	 */
 	@Test
 	public void md5() {
 		String algorithmName = "md5";  
@@ -20,23 +24,30 @@ public class MD5 {
 		System.out.println(encodedPassword);
 	}
 	
+	/**
+	 * 1、使用固定字符"abc"进行加盐
+	 * 2、加密1次
+	 */
 	@Test
 	public void md5_1(){
 		String hashAlgorithmName = "md5";
         String credentials = "123";
         int hashIterations = 1;
-        ByteSource credentialsSalt = ByteSource.Util.bytes("abc");
-        Object obj = new SimpleHash(hashAlgorithmName, credentials, credentialsSalt, hashIterations);
+        ByteSource salt = ByteSource.Util.bytes("abc");
+        Object obj = new SimpleHash(hashAlgorithmName, credentials, salt, hashIterations);
         System.out.println(obj);
 	}
 	
+	/**
+	 * 1、普通md5加密
+	 * 2、加密1次
+	 */
 	@Test
 	public void md5_2() {
 		String hashAlgorithmName = "md5";
-		String credentials = "123";
+		String password = "123456";
 		int hashIterations = 1;
-		//ByteSource credentialsSalt = ByteSource.Util.bytes("md");
-		Object obj = new SimpleHash(hashAlgorithmName, credentials, null, hashIterations);
+		Object obj = new SimpleHash(hashAlgorithmName, password, null, hashIterations);
 		System.out.println(obj);
 	}
 	

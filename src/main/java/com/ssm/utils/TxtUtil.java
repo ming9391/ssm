@@ -44,6 +44,8 @@ public class TxtUtil {
 	// 写TXT文件
 	public static void writeTxt(String filePath,String fileName,String content) throws IOException {
 		File path = new File(filePath);
+		path.setWritable(true, false);
+		Runtime.getRuntime().exec("chmod 777 -R " + path);
 		if(!path.exists()){
 		 path.mkdirs();
 		}

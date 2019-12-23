@@ -2,6 +2,11 @@ package com.ssm.test;
 
 import org.junit.Test;
 
+/**
+ * Thread Runnable 线程
+ * @author swm
+ *
+ */
 public class ThreadTest {
 
 	class thread_test extends Thread {
