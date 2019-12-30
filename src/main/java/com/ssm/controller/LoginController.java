@@ -15,13 +15,15 @@ import com.ssm.model.User;
 
 @Controller
 public class LoginController {
-	//日志
+	
+	// 日志
 	private static final Logger logs = LoggerFactory.getLogger(LoginController.class);
 	
 	/**
-	 * 登录 
+	 * 1、登录 
+	 * 2、使用shiro框架认证登陆信息
 	 */
-	//@RequiresRoles(value = { "admin" })
+	@RequiresRoles(value = { "admin" })
 	@RequestMapping("findLoginUser.do")
 	public String findLoginUser(HttpServletRequest request,HttpServletResponse response,User user) throws IOException{
 		Subject subject = SecurityUtils.getSubject();
@@ -31,8 +33,7 @@ public class LoginController {
 			if(subject.isAuthenticated()) {
 				request.getSession().setAttribute("user", user);
 			}
-			//subject.checkRole("admin");//检查是否包含该权限
-			User user1 = (User) request.getSession().getAttribute("user");
+			subject.checkRole("admin"); // 检查是否包含该权限
 			System.out.println("认证："+subject.isAuthenticated());
 		} catch (Exception e) {
 			System.out.println("登陆失败："+e.getMessage());

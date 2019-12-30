@@ -17,6 +17,9 @@ public class HrFileTask {
 	
 	@Scheduled(cron = "0/10 * * * * ?")
     public void hrFileTk() throws Exception {
-		hrFileService.hrFile();
+		System.out.println("hr文件定时入库开始......................"+System.currentTimeMillis());
+		//hrFileService.hrFile();
+		System.out.println("hr文件定时入库结束......................"+System.currentTimeMillis());
+
 	}
 }
